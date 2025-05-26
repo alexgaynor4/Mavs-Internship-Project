@@ -1,34 +1,31 @@
+// src/components/ReportForm.jsx
 import React, { useState } from 'react';
-import { TextField, Button, List, ListItem, ListItemText } from '@mui/material';
+import { TextField, Button, Box } from '@mui/material';
 
-export default function ReportForm({ playerId }) {
-  const [reports, setReports] = useState([]);
+export default function ReportForm({ onAdd }) {
   const [text, setText] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (text.trim()) {
-      setReports(prev => [...prev, { id: Date.now(), text }]);
-      setText('');
-    }
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    onAdd(trimmed);
+    setText('');
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
       <TextField
         label="New Scouting Report"
-        fullWidth
         multiline
         rows={3}
+        fullWidth
         value={text}
-        onChange={e => setText(e.target.value)}
+        onChange={(e) => setText(e.target.value)}
       />
-      <Button type="submit" variant="contained" sx={{ mt: 1 }}>Add Report</Button>
-      <List>
-        {reports.map(r => (
-          <ListItem key={r.id}><ListItemText primary={r.text} /></ListItem>
-        ))}
-      </List>
-    </form>
+      <Button type="submit" variant="contained" sx={{ mt: 1 }}>
+        Add Report
+      </Button>
+    </Box>
   );
 }
