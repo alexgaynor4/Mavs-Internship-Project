@@ -5,32 +5,26 @@ import BigBoard from './components/BigBoard';
 import PlayerProfile from './components/PlayerProfile';
 import mavsLogo from './assets/mavs_logo.png';
 
-export default function App() {
+// main app component
+function App() {
   return (
     <Container maxWidth="lg">
       <AppBar position="static" color="primary">
         <Toolbar>
-          {/* Mavericks Logo */}
           <Box
             component="img"
             src={mavsLogo}
-            alt="Mavericks Logo"
-            sx={{ height: 40, mr: 2 }}
+            alt="Mavs Logo"
+            style={{ height: 40, marginRight: 16 }}
           />
-
-          {/* App Title */}
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" style={{ flexGrow: 1 }}>
             NBA Draft Hub
           </Typography>
-
-          {/* Nav Button */}
           <Button component={Link} to="/" color="inherit">
             Big Board
           </Button>
         </Toolbar>
       </AppBar>
-
-      {/* Routes */}
       <Routes>
         <Route path="/" element={<BigBoard />} />
         <Route path="/player/:playerId" element={<PlayerProfile />} />
@@ -38,3 +32,5 @@ export default function App() {
     </Container>
   );
 }
+
+export default App;

@@ -1,127 +1,124 @@
+// src/components/BigBoard.jsx
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import playersData from '../data/players.json';
 import {
-  TableContainer,
   Paper,
+  Typography,
+  TableContainer,
   Table,
   TableHead,
   TableRow,
   TableCell,
   TableBody,
-  TableSortLabel,
-  Typography
+  TableSortLabel
 } from '@mui/material';
-
-// Comparator helper
-function getComparator(order, orderBy) {
-  return (a, b) => {
-    let valA, valB;
-    if (orderBy === 'overall') {
-      valA = a.overall;
-      valB = b.overall;
-    } else if (orderBy === 'name') {
-      valA = a.name.toLowerCase();
-      valB = b.name.toLowerCase();
-    } else {
-      valA = a.rank[orderBy] ?? Infinity;
-      valB = b.rank[orderBy] ?? Infinity;
-    }
-    if (valA < valB) return order === 'asc' ? -1 : 1;
-    if (valA > valB) return order === 'asc' ? 1 : -1;
-    // tie-breaker on overall
-    return a.overall - b.overall;
-  };
-}
+import playersData from '../data/players.json';
 
 export default function BigBoard() {
   const { bio, scoutRankings } = playersData;
 
-  // build initial rows with overall rank
-  const initialRows = useMemo(() => {
-    const merged = scoutRankings.map(rank => {
+  // build rows with overall rank
+  const rowsInit = useMemo(() => {
+    const list = scoutRankings.map(rank => {
       const player = bio.find(p => p.playerId === rank.playerId);
-      const scores = Object.values(rank).filter(v => v !== rank.playerId && v != null);
-      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+      const scores = Object.entries(rank)
+        .filter(([k,v]) => k !== 'playerId' && v != null)
+        .map(([_,v]) => v);
+      const avg = scores.reduce((a,b) => a + b, 0) / scores.length;
       return { ...player, rank, avg };
-    }).sort((a, b) => a.avg - b.avg);
-    return merged.map((row, index) => ({ ...row, overall: index + 1 }));
+    });
+    list.sort((a,b) => a.avg - b.avg);
+    return list.map((item,i) => ({ ...item, overall: i + 1 }));
   }, [bio, scoutRankings]);
 
-  const [orderBy, setOrderBy] = useState('overall');
-  const [order, setOrder] = useState('asc');
+  // sorter
+  function getSort(order, key) {
+    return (a, b) => {
+      let va = key === 'name' ? a.name.toLowerCase() : a[key] ?? a.avg;
+      let vb = key === 'name' ? b.name.toLowerCase() : b[key] ?? b.avg;
+      if (va < vb) return order === 'asc' ? -1 : 1;
+      if (va > vb) return order === 'asc' ? 1 : -1;
+      return a.avg - b.avg;
+    };
+  }
 
-  const handleSort = (field) => {
-    if (orderBy === field) {
-      setOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+  const [sortKey, setSortKey] = useState('overall');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const sortedRows = useMemo(
+    () => [...rowsInit].sort(getSort(sortOrder, sortKey)),
+    [rowsInit, sortKey, sortOrder]
+  );
+
+  // columns to show from scoutRankings
+  const scouts = Object.keys(scoutRankings[0]).filter(k => k !== 'playerId');
+
+  const handleSort = field => {
+    if (sortKey === field) {
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
-      setOrderBy(field);
-      setOrder('asc');
+      setSortKey(field);
+      setSortOrder('asc');
     }
   };
 
-  const rows = useMemo(() => {
-    return [...initialRows].sort(getComparator(order, orderBy));
-  }, [initialRows, order, orderBy]);
-
-  // scout columns
-  const scoutCols = Object.keys(scoutRankings[0]).filter(k => k !== 'playerId');
-
   return (
-    <Paper sx={{ mt: 3 }}>
-      <Typography variant="h5" sx={{ p: 2 }}>Big Board</Typography>
-      <TableContainer sx={{ maxHeight: '70vh' }}>
+    <Paper style={{ margin: 16 }}>
+      <Typography variant="h5" style={{ padding: 16 }}>
+        Big Board
+      </Typography>
+      <TableContainer style={{ maxHeight: '70vh' }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell sortDirection={orderBy === 'overall' ? order : false}>
+              <TableCell>
                 <TableSortLabel
-                  active={orderBy === 'overall'}
-                  direction={orderBy === 'overall' ? order : 'asc'}
+                  active={sortKey === 'overall'}
+                  direction={sortOrder}
                   onClick={() => handleSort('overall')}
                 >
                   Overall
                 </TableSortLabel>
               </TableCell>
-              <TableCell sortDirection={orderBy === 'name' ? order : false}>
+              <TableCell>
                 <TableSortLabel
-                  active={orderBy === 'name'}
-                  direction={orderBy === 'name' ? order : 'asc'}
+                  active={sortKey === 'name'}
+                  direction={sortOrder}
                   onClick={() => handleSort('name')}
                 >
                   Player
                 </TableSortLabel>
               </TableCell>
-              {scoutCols.map(scout => (
-                <TableCell key={scout} sortDirection={orderBy === scout ? order : false}>
+              {scouts.map(s => (
+                <TableCell key={s}>
                   <TableSortLabel
-                    active={orderBy === scout}
-                    direction={orderBy === scout ? order : 'asc'}
-                    onClick={() => handleSort(scout)}
+                    active={sortKey === s}
+                    direction={sortOrder}
+                    onClick={() => handleSort(s)}
                   >
-                    {scout}
+                    {s}
                   </TableSortLabel>
                 </TableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => (
+            {sortedRows.map(row => (
               <TableRow
                 key={row.playerId}
                 hover
                 component={Link}
                 to={`/player/${row.playerId}`}
-                sx={{ textDecoration: 'none' }}
+                style={{ textDecoration: 'none' }}
               >
                 <TableCell>{row.overall}</TableCell>
                 <TableCell>{row.name}</TableCell>
-                {scoutCols.map(scout => {
-                  const deviation = row.rank[scout] != null ? row.rank[scout] - row.avg : 0;
-                  const color = deviation <= -2 ? 'green' : deviation >= 2 ? 'red' : 'inherit';
+                {scouts.map(s => {
+                  const val = row.rank[s] != null ? row.rank[s] : '-';
+                  const diff = row.rank[s] != null ? row.rank[s] - row.avg : 0;
+                  const color = diff <= -2 ? 'green' : diff >= 2 ? 'red' : 'inherit';
                   return (
-                    <TableCell key={scout} sx={{ color }}>
-                      {row.rank[scout] ?? '-'}
+                    <TableCell key={s} style={{ color }}>
+                      {val}
                     </TableCell>
                   );
                 })}

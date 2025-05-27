@@ -1,16 +1,18 @@
 // src/components/ReportForm.jsx
 import React, { useState } from 'react';
-import { TextField, Button, Box } from '@mui/material';
+import { Box, TextField, Button } from '@mui/material';
 
+// simple form to add a new scouting report
 export default function ReportForm({ onAdd }) {
-  const [text, setText] = useState('');
+  const [reportText, setReportText] = useState('');
 
-  const handleSubmit = (e) => {
+  // handle form submission
+  const handleSubmit = e => {
     e.preventDefault();
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    onAdd(trimmed);
-    setText('');
+    const text = reportText.trim();
+    if (!text) return;
+    onAdd(text);
+    setReportText('');
   };
 
   return (
@@ -20,8 +22,8 @@ export default function ReportForm({ onAdd }) {
         multiline
         rows={3}
         fullWidth
-        value={text}
-        onChange={(e) => setText(e.target.value)}
+        value={reportText}
+        onChange={e => setReportText(e.target.value)}
       />
       <Button type="submit" variant="contained" sx={{ mt: 1 }}>
         Add Report
