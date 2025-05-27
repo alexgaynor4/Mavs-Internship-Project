@@ -1,4 +1,3 @@
-// src/components/StatsToggle.jsx
 import React, { useState, useMemo } from 'react';
 import playersData from '../data/players.json';
 import {

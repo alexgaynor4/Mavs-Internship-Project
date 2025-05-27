@@ -1,4 +1,3 @@
-// src/components/Measurements.jsx
 import React, { useMemo } from 'react';
 import playersData from '../data/players.json';
 import { Paper, Typography } from '@mui/material';
